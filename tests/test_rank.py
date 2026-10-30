@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from numcompute.rank import rank, percentile
+from numcompute_stream.rank import rank, percentile
 
 
 # ---------- rank ----------

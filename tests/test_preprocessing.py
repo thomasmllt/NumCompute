@@ -13,7 +13,7 @@ Covered Test Cases:
 """
 import numpy as np
 import pytest
-from numcompute.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, SimpleImputer
+from numcompute_stream.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, SimpleImputer
 
 def test_standard_scaler():
     X = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])

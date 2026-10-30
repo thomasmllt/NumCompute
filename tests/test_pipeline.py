@@ -1,8 +1,8 @@
 """Unit tests for the pipeline module (NumCompute framework)."""
 import numpy as np
 import pytest
-from numcompute.pipeline import Pipeline, Transformer, Estimator
-from numcompute.preprocessing import StandardScaler
+from numcompute_stream.pipeline import Pipeline, Transformer, Estimator
+from numcompute_stream.preprocessing import StandardScaler
 
 class DummyMultiplier(Transformer):
     def __init__(self, factor=2.0):
@@ -37,7 +37,7 @@ def test_pipeline_predict():
 def test_full_pipeline_workflow():
     """Test an end-to-end pipeline combining SimpleImputer and MinMaxScaler."""
     X = np.array([[1.0, np.nan], [3.0, 4.0], [5.0, 6.0]])
-    from numcompute.preprocessing import SimpleImputer, MinMaxScaler
+    from numcompute_stream.preprocessing import SimpleImputer, MinMaxScaler
     
     pipe = Pipeline([
         ('impute', SimpleImputer(strategy="mean")),

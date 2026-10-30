@@ -16,7 +16,7 @@ Covered test cases:
 
 import numpy as np
 import pytest 
-from numcompute.io import load_csv
+from numcompute_stream.io import load_csv
 
 def test_load_csv_basic(tmp_path):
     #Create a temporary .csv path

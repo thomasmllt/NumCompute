@@ -1,7 +1,7 @@
 """Unit tests for the utils module (NumCompute framework)."""
 import numpy as np
 import pytest
-from numcompute.utils import euclidean_distance, sigmoid, softmax, logsumexp, batch_generator
+from numcompute_stream.utils import euclidean_distance, sigmoid, softmax, logsumexp, batch_generator
 
 def test_euclidean_distance():
     u = [0.0, 0.0]

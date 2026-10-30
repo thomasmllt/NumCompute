@@ -17,7 +17,7 @@ pip install -e ".[dev]"     # also installs pytest, to run the tests
 
 ```python
 import numpy as np
-from numcompute import (load_csv, StandardScaler, SimpleImputer, Pipeline,
+from numcompute_stream import (load_csv, StandardScaler, SimpleImputer, Pipeline,
                         topk, rank, percentile, mean, accuracy, grad)
 
 X = load_csv("data.csv", delimiter=",", skiprows=1)    # missing values -> NaN

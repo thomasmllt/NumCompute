@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from numcompute.metrics import (
+from numcompute_stream.metrics import (
     accuracy,
     confusion_matrix,
     f1,

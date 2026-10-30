@@ -12,9 +12,9 @@ from fractions import Fraction
 import numpy as np
 import pytest
 
-from numcompute.sort_search import (stable_argsort, stable_sort, multikey_sort,
+from numcompute_stream.sort_search import (stable_argsort, stable_sort, multikey_sort,
                                     topk, quickselect, binary_search)
-from numcompute.rank import rank, percentile
+from numcompute_stream.rank import rank, percentile
 
 N_CASES = 300
 pytestmark = pytest.mark.filterwarnings("error")   # any RuntimeWarning fails a test

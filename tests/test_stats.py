@@ -1,6 +1,6 @@
 import numpy as np
 
-from numcompute.stats import (
+from numcompute_stream.stats import (
     mean,
     median,
     std,
