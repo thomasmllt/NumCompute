@@ -13,6 +13,10 @@ class Transformer:
         """Fit transformer to data"""
         return self
 
+    def partial_fit(self, X, y=None):
+        """Update transformer with a chunk of data. Stateless by default."""
+        return self
+
     def transform(self, X):
         """Transform data."""
         raise NotImplementedError
@@ -27,7 +31,7 @@ class Estimator:
     def fit(self, X, y=None):
         """Fit transformer to data"""
         return self
-    
+
     def predict(self, X):
         """Make predictions."""
         raise NotImplementedError
@@ -59,7 +63,49 @@ class Pipeline:
             if hasattr(step, "fit"):
                 step.fit(Xt, y)
         return self
-    
+
+    def partial_fit(self, X, y=None):
+        """Update all steps with a new chunk of data.
+
+        Each transformer is updated with the chunk, then transforms it for
+        the next step. The final step is only updated. All steps are checked
+        first, so that an invalid pipeline does not update part of its steps.
+
+        A transformer whose output width changes breaks the following steps:
+        a OneHotEncoder that discovers a category adds a column, which a
+        decision tree rejects because its number of features is fixed.
+
+        Parameters
+        ----------
+        X : array_like, shape (n_samples, n_features)
+            New chunk of data.
+        y : array_like, shape (n_samples,), optional
+            Target values of the chunk.
+
+        Returns
+        -------
+        self : Pipeline
+
+        Raises
+        ------
+        ValueError
+            If a step does not implement partial_fit, or an intermediate
+            step does not implement transform.
+        """
+        for name, step in self.steps:
+            if not hasattr(step, "partial_fit"):
+                raise ValueError(f"Step '{name}' does not implement partial_fit method.")
+        for name, step in self.steps[:-1]:
+            if not hasattr(step, "transform"):
+                raise ValueError(f"Step '{name}' does not implement transform method.")
+
+        Xt = X
+        for name, step in self.steps[:-1]:
+            Xt = step.partial_fit(Xt, y).transform(Xt)
+        if self.steps:
+            self.steps[-1][1].partial_fit(Xt, y)
+        return self
+
     def transform(self, X, y=None):
         """Fit all steps and transform data."""
         Xt = X
