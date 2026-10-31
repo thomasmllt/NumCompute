@@ -7,3 +7,4 @@ from .preprocessing import *
 from .metrics import *
 from .optim import *
 from .utils import *
+from .tree import *
