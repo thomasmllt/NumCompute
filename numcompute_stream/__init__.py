@@ -9,3 +9,4 @@ from .optim import *
 from .utils import *
 from .tree import *
 from .stream import *
+from .visualise import *
