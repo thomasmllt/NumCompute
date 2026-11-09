@@ -1,0 +1,7 @@
+operation,n,loop_ms,vectorised_ms,speedup,repeats,seed,method,cpu,ram_gb,os,python,numpy
+split search,1000,20.281,1.492,13.6,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
+tree predict,1000,2.411,0.135,17.9,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
+running mean/var,1000,2.445,0.423,5.8,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
+split search,10000,217.471,16.094,13.5,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
+tree predict,10000,27.450,1.032,26.6,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
+running mean/var,10000,24.785,3.910,6.3,3,42,"time.perf_counter, best of repeats",arm,16.0,Darwin 25.1.0,3.13,2.5.0
