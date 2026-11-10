@@ -1,96 +1,100 @@
-# NumCompute
+# NumCompute-Stream
 
-A lightweight scientific computing toolkit built from scratch with **plain Python and NumPy only** (no pandas, scikit-learn or PyTorch). It provides vectorised, reusable components for data loading, preprocessing, sorting and ranking, statistics, evaluation metrics, numerical gradients, pipelines and benchmarking.
+A small machine learning framework for **streaming data**, built with NumPy and
+matplotlib only. Data arrives in chunks, and every component can learn from one
+chunk at a time with `partial_fit`.
+
+It extends NumCompute with:
+
+- a decision tree classifier that buffers chunks and retrains when the buffer is full,
+- streaming preprocessing, statistics and metrics,
+- a training loop that logs metrics, time and memory for each chunk,
+- plots of the metrics over time.
 
 ## Installation
 
-Requires Python 3.10+ and NumPy 2.0+.
+Requires Python 3.10+.
 
 ```bash
-git clone https://github.com/HwistleK/NumCompute.git
+git clone https://github.com/thomasmllt/NumCompute.git
 cd NumCompute
-pip install -e .            # installs numcompute and NumPy
-pip install -e ".[dev]"     # also installs pytest, to run the tests
+git checkout assignment2.2-a3227265
+pip install -e ".[dev]"     # numpy, matplotlib, plus pytest and ipykernel
 ```
 
 ## Quick start
 
 ```python
-import numpy as np
-from numcompute_stream import (load_csv, StandardScaler, SimpleImputer, Pipeline,
-                        topk, rank, percentile, mean, accuracy, grad)
+from numcompute_stream import (load_csv, Pipeline, StandardScaler,
+                               DecisionTreeClassifier, StreamTrainer, iter_chunks,
+                               plot_metric_over_time)
 
-X = load_csv("data.csv", delimiter=",", skiprows=1)    # missing values -> NaN
+data = load_csv("demo/banknote.csv", skiprows=1)
+X, y = data[:, :-1], data[:, -1]
 
-pipe = Pipeline([("impute", SimpleImputer()), ("scale", StandardScaler())])
-X_tr = pipe.fit_transform(X)
+pipe = Pipeline([
+    ("scale", StandardScaler()),
+    ("tree", DecisionTreeClassifier(max_depth=5, buffer_size=200)),
+])
 
-scores = np.array([72, 95, 88, 95, 60, np.nan, 81])
-topk(scores, 3)                       # (array([95., 95., 88.]), array([1, 3, 2]))
-rank(scores, method="average")        # ties share 5.5, NaN stays unranked
-percentile(scores, [25, 50, 75])      # array([74.25, 84.5 , 93.25])
-mean(scores)                          # 81.83..., NaN ignored
+# Each chunk is used to test the model, then to train it (partial_fit).
+trainer = StreamTrainer(pipe).run(iter_chunks(X, y, chunk_size=50))
 
-accuracy([1, 0, 1, 1], [1, 1, 1, 0])  # 0.5
-grad(lambda x: np.sum(x ** 2), np.array([2.0, 3.0]))   # array([4., 6.])
+print(trainer.summary())
+plot_metric_over_time(trainer.history("cumulative_accuracy"), ylabel="Accuracy")
 ```
 
-A full end-to-end walkthrough is in [`demo/quickstart.ipynb`](demo/quickstart.ipynb).
+## Main modules
 
-## API overview
-
-| Module | Main API |
+| Module | What it adds for streaming |
 | --- | --- |
-| `io` | `load_csv(filepath, delimiter, skiprows, missing_values, filling_values, dtype)` |
-| `preprocessing` | `StandardScaler`, `MinMaxScaler(feature_range)`, `OneHotEncoder`, `SimpleImputer(strategy, fill_value)` |
-| `pipeline` | `Transformer`, `Estimator`, `Pipeline(steps)` with `fit`, `transform`, `fit_transform`, `predict` |
-| `stats` | `mean`, `median`, `std`, `minimum`, `maximum`, `histogram`, `quantiles` (NaN ignored, `axis` supported) |
-| `sort_search` | `stable_sort`, `stable_argsort`, `multikey_sort`, `topk`, `quickselect`, `binary_search` |
-| `rank` | `rank(method='average' \| 'dense' \| 'ordinal')`, `percentile(interpolation='linear' \| 'lower' \| 'higher' \| 'midpoint')` |
-| `utils` | `euclidean_distance`, `sigmoid`, `softmax`, `logsumexp`, `batch_generator` |
-| `metrics` | `accuracy`, `precision`, `recall`, `f1`, `confusion_matrix`, `mse` |
-| `optim` | `grad(f, x, h, method='central' \| 'forward')`, `jacobian(F, x, h, method)` |
-| `benchmarking` | `run_benchmarks`, `write_results`, `main` |
+| `tree.py` | `DecisionTreeClassifier` with `fit`, `partial_fit` (buffered), `flush`, `predict`, `predict_proba` |
+| `stream.py` | `StreamTrainer` (`fit_chunk`, `score_chunk`, `run`, `history`, `summary`) and `iter_chunks` |
+| `preprocessing.py` | `partial_fit` for `StandardScaler`, `MinMaxScaler`, `OneHotEncoder`, `SimpleImputer` |
+| `stats.py` | `StreamingStats.update_stats` (mean, variance, min, max, quantiles), `StreamingHistogram` |
+| `metrics.py` | Streaming accuracy, precision, recall, F1, AUC, MSE with `update`, `result`, `reset` and an optional rolling `window` |
+| `pipeline.py` | `Pipeline.partial_fit` |
+| `visualise.py` | `plot_metric_over_time`, `compare_models`, `plot_predictions_vs_ground_truth` |
 
-Conventions used across the package:
+The NumCompute modules (`io`, `sort_search`, `rank`, `utils`, `optim`) are still included.
 
-- **Estimator API:** `fit(X) -> self`, `transform(X) -> X_out`, `fit_transform(X) -> X_out`
-- **Errors:** `TypeError` for wrong input types, `ValueError` for wrong values or shapes
-- **NaN:** treated as missing (ignored in statistics and percentiles, left unranked by `rank`)
-- **Docstrings:** NumPy style, including shapes, exceptions and time/space complexity
+## Demo
 
-## Running the tests
+[`demo/stream_demo.ipynb`](demo/stream_demo.ipynb) loads a CSV file, streams it in
+chunks through a pipeline and plots the results. Open it in Jupyter or VS Code and
+run all cells.
 
-```bash
-python -m pytest -v
-```
+The dataset is *Banknote Authentication* by V. Lohweg, from the
+[UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/267/banknote+authentication)
+(CC BY 4.0). A header row was added to the file.
 
-## Performance
-
-Python loops vs. vectorised NumPy implementations (n = 10,000, best of 5 runs, seed 42).
-Environment: Apple Silicon (arm), 16 GB RAM, macOS (Darwin 25.1.0), Python 3.13, NumPy 2.5.0.
-
-| Operation | n | Python loop (ms) | Vectorised (ms) | Speed-up (×) |
-| --- | ---: | ---: | ---: | ---: |
-| StandardScaler | 10,000 | 3.682 | 0.015 | 244.8 |
-| top-k | 10,000 | 1.867 | 0.211 | 8.9 |
-| rank | 10,000 | 3.645 | 0.637 | 5.7 |
-| histogram | 10,000 | 1.291 | 0.095 | 13.6 |
-
-Reproduce (writes CSVs to `benchmark/` and prints the table):
+## Tests
 
 ```bash
-python -m numcompute.benchmarking
+python -m pytest
 ```
+
+## Benchmarks
+
+Run from the project root:
+
+```bash
+python benchmark/bench_loop_vs_vectorised.py   # Python loops vs NumPy
+python benchmark/bench_buffer_size.py          # effect of buffer_size
+```
+
+Each script prints a table and saves its results in `benchmark/`.
+The loop vs NumPy results for NumCompute itself come from
+`python -m numcompute_stream.benchmarking`.
 
 ## Project structure
 
 ```
 NumCompute/
-├── numcompute/        # the package (10 modules)
-├── tests/             # pytest unit tests, incl. randomised tests
-├── demo/              # quickstart.ipynb
-├── benchmark/         # loop vs. vectorised results (CSV)
+├── numcompute_stream/   # the package
+├── tests/               # unit tests
+├── demo/                # stream_demo.ipynb, quickstart.ipynb, data files
+├── benchmark/           # benchmark scripts and results
 ├── README.md
 └── pyproject.toml
 ```

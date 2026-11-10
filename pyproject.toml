@@ -9,3 +9,5 @@ dependencies = ["numpy", "matplotlib"]
 
 [tool.setuptools]
 packages = ["numcompute_stream"]
+[project.optional-dependencies]
+dev = ["pytest", "ipykernel"]
