@@ -6,6 +6,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.text import Text
 
 from numcompute_stream.visualise import (
     compare_models,
@@ -72,3 +73,17 @@ def test_invalid_inputs():
         compare_models([1.0], [1.0], ("only one",), show=False)
     with pytest.raises(ValueError):
         plot_predictions_vs_ground_truth([0, 1], [0], show=False)
+
+
+def test_legend_does_not_overlap_a_long_title():
+    fig, ax = plt.subplots(figsize=(7, 4), layout="constrained")
+    compare_models([0.5, 0.6], [0.7, 0.8], ("buffer_size=100", "buffer_size=500"),
+                   title="A long title that reaches the legend of the plot", ax=ax)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    title = next(child for child in ax.get_children()
+                 if isinstance(child, Text) and child.get_text().startswith("A long"))
+    legend_box = ax.get_legend().get_window_extent(renderer)
+    assert not legend_box.overlaps(title.get_window_extent(renderer))
+    assert legend_box.y0 >= ax.get_window_extent(renderer).y1 - 0.5  # above the data
+    plt.close(fig)
