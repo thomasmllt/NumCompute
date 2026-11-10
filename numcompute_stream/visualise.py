@@ -30,6 +30,7 @@ _GRID = "#e4e3df"
 _SERIES_1 = "#2a78d6"
 _SERIES_2 = "#eb6834"
 _FIGURE_SIZE = (7, 4)
+_LEGEND_ROW = 24  # points between the plot and its title
 
 
 def _as_series(values, name):
@@ -51,10 +52,14 @@ def _get_axes(ax):
     return ax, True
 
 
-def _style_axes(ax, title, xlabel, ylabel):
-    """Apply the shared style: light grid, left title, only two spines."""
+def _style_axes(ax, title, xlabel, ylabel, legend=False):
+    """Apply the shared style: light grid, left title, only two spines.
+
+    With ``legend=True`` the title is raised to leave a row for the legend.
+    """
     ax.set_facecolor(_SURFACE)
-    ax.set_title(title, loc="left", color=_TEXT, fontsize=12)
+    ax.set_title(title, loc="left", color=_TEXT, fontsize=12,
+                 pad=_LEGEND_ROW if legend else None)
     ax.set_xlabel(xlabel, color=_TEXT_SECONDARY)
     ax.set_ylabel(ylabel, color=_TEXT_SECONDARY)
     ax.tick_params(colors=_TEXT_SECONDARY, length=0)
@@ -66,8 +71,9 @@ def _style_axes(ax, title, xlabel, ylabel):
 
 
 def _add_legend(ax):
-    """Put the legend above the plot, where it cannot hide any data."""
-    ax.legend(loc="lower right", bbox_to_anchor=(1.0, 1.0), ncols=2,
+    """Put the legend between the title and the plot, where it can hide
+    neither the data nor a long title."""
+    ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.0), ncols=2,
               frameon=False, labelcolor=_TEXT_SECONDARY, borderaxespad=0.0)
 
 
@@ -156,7 +162,7 @@ def compare_models(metric1, metric2, labels, title="Model comparison",
     first = _as_series(metric1, "metric1")
     second = _as_series(metric2, "metric2")
     ax, owns_figure = _get_axes(ax)
-    _style_axes(ax, title, xlabel, ylabel)
+    _style_axes(ax, title, xlabel, ylabel, legend=True)
     ax.plot(first, color=_SERIES_1, linewidth=1.5, marker="o", markersize=3,
             label=labels[0])
     ax.plot(second, color=_SERIES_2, linewidth=1.5, marker="o", markersize=3,
@@ -203,7 +209,7 @@ def plot_predictions_vs_ground_truth(y_true, y_pred,
     wrong = true_rows != pred_rows
 
     ax, owns_figure = _get_axes(ax)
-    _style_axes(ax, title, xlabel, ylabel)
+    _style_axes(ax, title, xlabel, ylabel, legend=True)
     ax.scatter(samples, true_rows, s=24, color=_SERIES_1, linewidths=0,
                label="Ground truth")
     ax.scatter(samples[wrong], pred_rows[wrong], s=40, color=_SERIES_2,
